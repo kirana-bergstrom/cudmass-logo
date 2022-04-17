@@ -2,4 +2,3 @@ numpy
 ipywidgets
 nbinteract
 matplotlib
-os
