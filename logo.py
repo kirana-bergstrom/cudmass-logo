@@ -1,15 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import re
 import os
 
 # download "Oswald" font here https://fonts.google.com/specimen/Oswald?preview.text_type=custom
 # and put Oswald directory in same directory as this script for custom font
 import matplotlib.font_manager as fm
 prop = fm.FontProperties(fname='Oswald/Oswald-VariableFont_wght.ttf')
-
-#TODO: add rounded square?
 
 # ------------------------
 # global variables
@@ -579,6 +576,11 @@ def logo(fname, colors, ratio='5:4', shape='default'):
         print('Please use ratio=\'3:2\', ratio=\'5:4\', or ratio=\'1:1\'')
         return
 
+    ftype = fname.split('.')[1]
+    if ftype != 'png' and ftype != 'eps':
+        print('file type can only be png or eps!')
+        return
+
     # square is a 1:1 rectangle, circle is a 1:1 oval, just force it
     if shape == 'square' or shape == 'circle' or shape == 'rounded_square':
         ratio = '1:1'
@@ -592,6 +594,7 @@ def logo(fname, colors, ratio='5:4', shape='default'):
         shift_up = 0.04
     else:
         shift_up = 0.0
+
 
     # -----------------------------------
     # begin plotting
@@ -647,4 +650,7 @@ def logo(fname, colors, ratio='5:4', shape='default'):
         os.mkdir('images')
 
     # save
-    fig.savefig('images/'+fname, transparent=True, pad_inches=1)
+    if ftype == 'png':
+        fig.savefig('images/'+fname, transparent=True, pad_inches=0.25, format='eps', dpi=1200)
+    else:
+        fig.savefig('images/'+fname, transparent=True, pad_inches=0.25, dpi=1200)
