@@ -212,7 +212,7 @@ def add_text(ax, shape, ratio, shift_up, popcorn_color, header_color1, header_co
         line[0].set_clip_path(footer_region)
 
 
-def draw_sky(ax, shift_up, color, draw_region):
+def draw_sky(ax, shift_up, color, draw_region, dpcs):
     """Draws the sky
 
     Args:
@@ -236,29 +236,46 @@ def draw_sky(ax, shift_up, color, draw_region):
     # looks better to adjust the heights of the stripes depending on the number.
     if len(sky) == 1:
         denom = len(sky)
-        sky = ax.add_patch(plt.Rectangle((0.0,0.0), 1.0, 1.0,
-                                         facecolor=sky[0], transform=ax.transAxes, zorder=0))
+        alpha = 1.0
+        color = sky[0]
+        if sky[0] == 'transparent':
+            color = '#FFFFFF'
+            alpha = 0.0
+        sky = ax.add_patch(plt.Rectangle((0.0,0.0), 1.0, 1.0, alpha=alpha,
+                                         facecolor=color, transform=ax.transAxes, zorder=0))
         sky.set_clip_path(draw_region)
     elif len(sky) < 4:
         denom = len(sky) + 0.9 # adjust this number for number of stripes
         height = (1 - shift_up) / denom
         for count, color in enumerate(sky):
+            alpha = 1.0
+            if color == 'transparent':
+                color = '#FFFFFF'
+                alpha = 0.0
             sky = ax.add_patch(plt.Rectangle((0.0, 1-(count+1)*height), 1.0, height,
-                                             facecolor=color, transform=ax.transAxes, zorder=0))
+                                             facecolor=color, transform=ax.transAxes, zorder=0, alpha=alpha))
             sky.set_clip_path(draw_region)
     elif len(sky) < 6:
         denom = len(sky) + 1.9 # adjust this number for number of stripes
         height = (1 - shift_up) / denom
         for count, color in enumerate(sky):
+            alpha = 1.0
+            if color == 'transparent':
+                color = '#FFFFFF'
+                alpha = 0.0
             sky = ax.add_patch(plt.Rectangle((0.0, 1-(count+1)*height), 1.0, height,
-                                             facecolor=color, transform=ax.transAxes, zorder=0))
+                                             facecolor=color, transform=ax.transAxes, zorder=0, alpha=alpha))
             sky.set_clip_path(draw_region)
     else:
         denom = len(sky) + 2.5
         height = (1 - shift_up) / denom # adjust this number for number of stripes
         for count, color in enumerate(sky):
+            alpha = 1.0
+            if color == 'transparent':
+                color = '#FFFFFF'
+                alpha = 0.0
             sky = ax.add_patch(plt.Rectangle((0.0, 1-(count+1)*height), 1.0, height,
-                                             facecolor=color, transform=ax.transAxes, zorder=0))
+                                             facecolor=color, transform=ax.transAxes, zorder=0, alpha=alpha))
             sky.set_clip_path(draw_region)
 
 
@@ -290,7 +307,7 @@ def draw_popcorn(ax, shift_up, color, draw_region):
     dots_patch.set_clip_path(draw_region)
 
 
-def draw_mountains(ax, shift_up, color_1, color_2, draw_region):
+def draw_mountains(ax, shift_up, color_1, color_2, draw_region, dpcs):
     """Draws the mountains
 
     Note: a lot of "magic" numbers here, but all correspond to a popcorn function point.
@@ -309,6 +326,10 @@ def draw_mountains(ax, shift_up, color_1, color_2, draw_region):
     draw_region : mpatches patch object
         draw region (inside borders)
     """
+    alpha = 1.0
+    if color_2 == 'transparent':
+        alpha = 0.0
+        color_2 = '#FFFFFF'
     # right mountain
     mp = plt.plot([0.5,2/3],[0+shift_up,1/3+shift_up], color=color_1, zorder=4, linewidth=3)
     mp[0].set_clip_path(draw_region)
@@ -330,7 +351,7 @@ def draw_mountains(ax, shift_up, color_1, color_2, draw_region):
     mountain = ax.add_patch(plt.Polygon([[1/2,0+shift_up],
                                          [2/3,1/3+shift_up],
                                          [1,0+shift_up]
-                                        ], closed=True, fill=True, color=color_2, zorder=3))
+                                        ], closed=True, fill=True, color=color_2, alpha=alpha, zorder=3))
     mountain.set_clip_path(draw_region)
 
     # left mountain
@@ -363,7 +384,7 @@ def draw_mountains(ax, shift_up, color_1, color_2, draw_region):
     mountain = ax.add_patch(plt.Polygon([[0,0+shift_up],
                                          [1/3,1/3*shrink+shift_up],
                                          [1/2,0+shift_up]
-                                        ], closed=True, fill=True, color=color_2, zorder=1))
+                                        ], closed=True, fill=True, color=color_2, zorder=1, alpha=alpha))
     mountain.set_clip_path(draw_region)
 
 
@@ -397,6 +418,8 @@ def background_shapes(ax, shape, ratio, color_border1, color_border2):
     swidth_x = width_x*scale_x_bw
     sinn_border_width_x = inn_border_width_x*scale_x_bw
     sborder_width_x = border_width_x*scale_x_bw
+    
+    dpcs = []
 
     if shape == 'circle' or shape == 'oval':
         # defines an extra patch to cut the footer off at horizontal edges
@@ -514,28 +537,82 @@ def background_shapes(ax, shape, ratio, color_border1, color_border2):
         path_draw, = draw_patch.get_paths()
         draw_region = mpatches.PathPatch(path_draw, fc='none', ec=color_border1, linewidth=2, zorder=10)
         ax.add_patch(draw_region)
+        # -----------------------------
+        draw_patch_complement = plt.fill_between(xx,
+                                                 par_slope*(xx-0.5)**2+y_min,
+                                                 y_min-0.2,
+                                                 color='none', alpha=1.0, zorder=100)
+        path_draw, = draw_patch_complement.get_paths()
+        draw_region_complement = mpatches.PathPatch(path_draw,
+                                                    fc='none',
+                                                    ec='none',
+                                                    linewidth=2, zorder=10)
+        ax.add_patch(draw_region_complement)
+        dpcs.append(draw_region_complement)
+        draw_patch_complement = plt.fill_between(xx,
+                                                 y_max+0.2,
+                                                 -par_slope*(xx-0.5)**2+y_max,
+                                                 color='none', alpha=1.0, zorder=100)
+        path_draw, = draw_patch_complement.get_paths()
+        draw_region_complement = mpatches.PathPatch(path_draw,
+                                                    fc='none',
+                                                    ec='none',
+                                                    linewidth=2, zorder=10)
+        ax.add_patch(draw_region_complement)
+        dpcs.append(draw_region_complement)
+        xx = np.linspace(x_min-0.2, x_min, 1000)
+        draw_patch_complement = plt.fill_between(xx,
+                                                 y_min-0.2,
+                                                 y_max+0.2,
+                                                 color='none', alpha=1.0, zorder=100)
+        path_draw, = draw_patch_complement.get_paths()
+        draw_region_complement = mpatches.PathPatch(path_draw,
+                                                    fc='none',
+                                                    ec='none',
+                                                    linewidth=2, zorder=10)
+        ax.add_patch(draw_region_complement)
+        dpcs.append(draw_region_complement)
+        xx = np.linspace(x_max, x_max+0.2, 1000)
+        draw_patch_complement = plt.fill_between(xx,
+                                                 y_min-0.2,
+                                                 y_max+0.2,
+                                                 color='none', alpha=1.0, zorder=100)
+        path_draw, = draw_patch_complement.get_paths()
+        draw_region_complement = mpatches.PathPatch(path_draw,
+                                                    fc='none',
+                                                    ec='none',
+                                                    linewidth=2, zorder=10)
+        ax.add_patch(draw_region_complement)
+        dpcs.append(draw_region_complement)
+        # -----------------------------
         # first inner border
         xx = np.linspace(x_min-swidth_x, x_max+swidth_x, 1000)
-        border1_region = plt.fill_between(xx,
-                                          par_slope*(xx-0.5)**2+y_min-width_y,
-                                          -par_slope*(xx-0.5)**2+y_max+width_y,
-                                          color=color_border1, zorder=0)
+        for p in dpcs:
+            border1_region = plt.fill_between(xx,
+                                              par_slope*(xx-0.5)**2+y_min-width_y,
+                                              -par_slope*(xx-0.5)**2+y_max+width_y,
+                                              color=color_border1, zorder=0)
+            border1_region.set_clip_path(p)
         # second (contrasting color) border
         xx = np.linspace(x_min-swidth_x-sinn_border_width_x,
                          x_max+swidth_x+sinn_border_width_x,
                          1000)
-        border2_region = plt.fill_between(xx,
-                                          par_slope*(xx-0.5)**2+y_min-width_y-inn_border_width_y,
-                                          -par_slope*(xx-0.5)**2+y_max+width_y+inn_border_width_y,
-                                          color=color_border2, zorder=-1)
+        for p in dpcs:
+            border2_region = plt.fill_between(xx,
+                                              par_slope*(xx-0.5)**2+y_min-width_y-inn_border_width_y,
+                                              -par_slope*(xx-0.5)**2+y_max+width_y+inn_border_width_y,
+                                              color=color_border2, zorder=-1)
+            border2_region.set_clip_path(p)
         # final outside border
         xx = np.linspace(x_min-sborder_width_x, x_max+sborder_width_x, 1000)
-        border3_region = plt.fill_between(xx,
-                                          par_slope*(xx-0.5)**2+y_min-border_width_y,
-                                          -par_slope*(xx-0.5)**2+y_max+border_width_y,
-                                          color=color_border1, zorder=-2)
+        for p in dpcs:
+            border3_region = plt.fill_between(xx,
+                                              par_slope*(xx-0.5)**2+y_min-border_width_y,
+                                              -par_slope*(xx-0.5)**2+y_max+border_width_y,
+                                              color=color_border1, zorder=-2)
+            border3_region.set_clip_path(p)
 
-    return draw_region, footer_region
+    return draw_region, footer_region, dpcs
 
 
 def logo(fname, colors, ratio='5:4', shape='default'):
@@ -602,14 +679,14 @@ def logo(fname, colors, ratio='5:4', shape='default'):
     ax = plt.gca() # set up axis
     fig = plt.gcf() # set up fig
 
-    draw_region, footer_region = background_shapes(ax, shape, ratio,
-                                                   colors['border'], colors['border_contrast'])
+    draw_region, footer_region, dpcs = background_shapes(ax, shape, ratio,
+                                                         colors['border'], colors['border_contrast'])
 
-    draw_mountains(ax, shift_up, colors['mountains_edge'], colors['mountains_snow'], draw_region)
+    draw_mountains(ax, shift_up, colors['mountains_edge'], colors['mountains_snow'], draw_region, dpcs)
 
     draw_popcorn(ax, shift_up, colors['popcorn'], draw_region)
 
-    draw_sky(ax, shift_up, colors['sky'], draw_region)
+    draw_sky(ax, shift_up, colors['sky'], draw_region, dpcs)
 
     add_text(ax, shape, ratio, shift_up,
              colors['popcorn'], colors['header_text'], colors['header_tag'],
@@ -650,7 +727,7 @@ def logo(fname, colors, ratio='5:4', shape='default'):
         os.mkdir('images')
 
     # save
-    if ftype == 'png':
+    if ftype == 'eps':
         fig.savefig('images/'+fname, transparent=True, pad_inches=0.25, format='eps', dpi=1200)
     else:
         fig.savefig('images/'+fname, transparent=True, pad_inches=0.25, dpi=1200)
