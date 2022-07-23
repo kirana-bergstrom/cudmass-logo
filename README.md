@@ -1,5 +1,4 @@
-# cudmass-logo
-Code for generation of CU Denver Department of Mathematics and Statistical Sciences logo
+Scripts and example notebooks for generation of CU Denver logo
 
 1. (If Oswald directory not present) Download "Oswald" font here:
 https://fonts.google.com/specimen/Oswald?preview.text_type=custom
@@ -13,9 +12,9 @@ and put Oswald directory in same directory as this README file
 
 2b. Follow along with code in
 
-   - examples_shapes_ratios.ipynb,
-   - examples_colorways.ipynb,
-   - examples_celebration_colorways.ipynb
+   - examples_simple-default.ipynb,
+   - examples_standard-colorways.ipynb,
+   - examples_more-colorways.ipynb
 
    for customized logo generation
 
